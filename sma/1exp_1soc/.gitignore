@@ -1,0 +1,28 @@
+# Arquivos compilados do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de configuração local
+.env
+*.env
+
+# Logs e cache
+*.log
+*.cache/
+.cache/
+*.tmp
+
+# Diretórios temporários
+temp/
+tmp/
+*.bak
+
+# Dados do sistema
+.DS_Store
+Thumbs.db
+
+# Ambiente virtual (se usar)
+venv/
+.env/

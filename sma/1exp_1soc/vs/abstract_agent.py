@@ -24,7 +24,7 @@ class AbstAgent(ABC):
         6: (-1, 0),  # l : Left
         7: (-1, -1)  # ul: Up left diagonal
     }
-
+    
     def __init__(self, env, config_file):
         """
         Any class that inherits from this one will have these attributes

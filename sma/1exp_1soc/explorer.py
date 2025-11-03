@@ -13,6 +13,8 @@ from vs.abstract_agent import AbstAgent
 from vs.constants import VS
 from map import Map
 
+import sys
+
 flag = 1
 
 class Stack:
@@ -46,9 +48,20 @@ class Explorer(AbstAgent):
         self.map = Map()           # create a map for representing the environment
         self.victims = {}          # a dictionary of found victims: (seq): ((x,y), [<vs>])
                                    # the key is the seq number of the victim,(x,y) the position, <vs> the list of vital signals
+        self.config_file = config_file
 
+        print('resc ::: ', self.resc)
+        print('config_file:: ', config_file)
+        
         # put the current position - the base - in the map
         self.map.add((self.x, self.y), 1, VS.NO_VICTIM, self.check_walls_and_lim())
+
+    def verific_agent(self, name_file):
+        string = str(name_file)
+        partes = string.split("\\")     # precisa ser \\ ou string bruta
+        nome = partes[-1].replace(".txt", "")
+
+        return nome
 
     def get_next_position(self):
         """ Randomically, gets the next position that can be explored (no wall and inside the grid)
@@ -65,7 +78,53 @@ class Explorer(AbstAgent):
             # Check if the corresponding position in walls_and_lim is CLEAR
             if obstacles[direction] == VS.CLEAR:
                 return Explorer.AC_INCR[direction]
+
+    def get_next_position(self):
+        """Retorna o próximo movimento usando DFS."""
+        # Se a pilha estiver vazia, inicializa com a posição atual
+        if self.walk_stack.is_empty():
+            self.walk_stack.push((self.x, self.y))
         
+        nome = self.verific_agent(self.config_file)
+
+        priority_list_1 = [1, 2, 3, 4, 5, 0, 6, 7]
+
+        priority_list_2 = [2, 3, 4, 1, 5, 0, 6, 7]
+
+        priority_list_3 = [3, 4, 5, 2, 1, 0, 6, 7]
+
+        if nome == "explorer_1":
+            prioridade = priority_list_1
+        elif nome == "explorer_2":
+            prioridade = priority_list_2
+        else:
+            prioridade = priority_list_3
+
+        while not self.walk_stack.is_empty():
+            cx, cy = self.walk_stack.pop()
+            self.x, self.y = cx, cy
+
+            obstacles = self.check_walls_and_lim()
+
+            directions = prioridade
+
+            for direction in directions:
+                if obstacles[direction] == VS.CLEAR:
+                    dx, dy = Explorer.AC_INCR[direction]
+                    nx = cx + dx
+                    ny = cy + dy
+
+                    # Se ainda não visitou essa célula no mapa
+                    if not self.map.is_visited((nx, ny)):
+                        # Empilha a posição atual para retornar depois (DFS)
+                        self.walk_stack.push((cx, cy))
+                        # Empilha o próximo passo para explorar
+                        self.walk_stack.push((nx, ny))
+                        return dx, dy
+
+        # Se não houver mais posições para visitar, fica parado
+        return 0, 0
+
     def explore(self):
         # get an random increment for x and y       
         dx, dy = self.get_next_position()
@@ -112,42 +171,7 @@ class Explorer(AbstAgent):
 
         return
 
-    def get_next_position(self):
-        """Retorna o próximo movimento usando DFS."""
-        # Se a pilha estiver vazia, inicializa com a posição atual
-        if self.walk_stack.is_empty():
-            self.walk_stack.push((self.x, self.y))
-        
-        # Enquanto houver posições a explorar
-        while not self.walk_stack.is_empty():
-            cx, cy = self.walk_stack.pop()  # posição atual
-            self.x, self.y = cx, cy
-
-            # Verifica obstáculos ao redor
-            obstacles = self.check_walls_and_lim()
-
-            # Lista de movimentos possíveis (8 direções)
-            directions = list(range(8))
-            random.shuffle(directions)  # embaralha um pouco (opcional)
-
-            for direction in directions:
-                if obstacles[direction] == VS.CLEAR:
-                    dx, dy = Explorer.AC_INCR[direction]
-                    nx = cx + dx
-                    ny = cy + dy
-
-                    # Se ainda não visitou essa célula no mapa
-                    if not self.map.is_visited((nx, ny)):
-                        # Empilha a posição atual para retornar depois (DFS)
-                        self.walk_stack.push((cx, cy))
-                        # Empilha o próximo passo para explorar
-                        self.walk_stack.push((nx, ny))
-                        return dx, dy
-
-        # Se não houver mais posições para visitar, fica parado
-        return 0, 0
-
-
+   
     def explore(self):
         """Explora o ambiente usando DFS."""
         dx, dy = self.get_next_position()
