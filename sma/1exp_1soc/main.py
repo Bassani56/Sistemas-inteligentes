@@ -43,15 +43,17 @@ def main(vict_folder, env_folder, config_ag_folder):
     print('env ::: ', env.dic)
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 if __name__ == '__main__':
-    # dataset com sinais vitais das vitimas
-    vict_folder = os.path.join("..", r"C:\Users\User\Desktop\Trabalho_2_SI\datasets\vict\100v")
+    ROOT_PATH_REL = os.path.join(os.path.dirname(__file__), "..", "..")
 
-    # dataset do ambiente (paredes, posicao das vitimas)
-    env_folder = os.path.join("..", r"C:\Users\User\Desktop\Trabalho_2_SI\datasets\env\12x12_10v")
+    vict_folder_rel = os.path.join(ROOT_PATH_REL, "datasets", "vict", "408v")
+    env_folder_rel  = os.path.join(ROOT_PATH_REL, "datasets", "env", "94x94_408v")
+    
+    vict_folder = os.path.abspath(vict_folder_rel)
+    env_folder  = os.path.abspath(env_folder_rel)
 
-    # folder das configuracoes dos agentes
-    curr = os.getcwd()
-    config_ag_folder = os.path.join(curr, r"C:\Users\User\Desktop\Trabalho_2_SI\sma\1exp_1soc\config_ag_1")
+    config_ag_folder = os.path.join(os.path.dirname(__file__), "config_ag_1")
 
     main(vict_folder, env_folder, config_ag_folder)

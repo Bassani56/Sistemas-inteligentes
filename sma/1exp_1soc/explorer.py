@@ -69,15 +69,15 @@ class Explorer(AbstAgent):
         
         nome = os.path.splitext(os.path.basename(self.config_file))[0].upper()
 
-        priority_list_1 = [1, 2, 3, 4, 5, 0, 6, 7]
+        priority_list_1 = [2, 1, 3, 4, 5, 0, 6, 7]
 
-        priority_list_2 = [2, 3, 4, 1, 5, 0, 6, 7]
+        priority_list_2 = [3, 2, 4, 1, 5, 0, 6, 7]
 
-        priority_list_3 = [3, 4, 5, 2, 1, 0, 6, 7]
+        priority_list_3 = [4, 3, 5, 2, 1, 0, 6, 7]
 
-        if nome == "explorer_1":
+        if nome == "EXPLORER_1":
             prioridade = priority_list_1
-        elif nome == "explorer_2":
+        elif nome == "EXPLORER_2":
             prioridade = priority_list_2
         else:
             prioridade = priority_list_3
