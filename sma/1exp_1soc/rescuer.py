@@ -20,11 +20,11 @@ class Rescuer(AbstAgent):
         """ 
         @param env: a reference to an instance of the environment class
         @param config_file: the absolute path to the agent's config file"""
-
+     
         super().__init__(env, config_file)
+        print(f"Rescuer initialized. NAME = '{self.NAME}' from file '{config_file}'")
 
         self.env = env
-
 
         # Specific initialization for the rescuer
         self.map = None             # explorer will pass the map
@@ -48,7 +48,8 @@ class Rescuer(AbstAgent):
         """ The explorer sends the map containing the walls and
         victims' location. The rescuer becomes ACTIVE. From now,
         the deliberate method is called by the environment"""
-
+        print(f"\n\n*** R E S C U E R *** called by {self.NAME} ***")
+        
         print(f"\n\n*** R E S C U E R ***")
         self.map = map
         print(f"{self.NAME} Map received from the explorer")
@@ -74,7 +75,7 @@ class Rescuer(AbstAgent):
         for a in self.plan:
             self.plan_x += a[0]
             self.plan_y += a[1]
-            print(f"{self.NAME} {i}) dxy=({a[0]}, {a[1]}) vic: a[2] => at({self.plan_x}, {self.plan_y})")
+            # print(f"{self.NAME} {i}) dxy=({a[0]}, {a[1]}) vic: a[2] => at({self.plan_x}, {self.plan_y})")
             i += 1
 
         print(f"{self.NAME} END OF PLAN")
@@ -210,9 +211,11 @@ class Rescuer(AbstAgent):
             if there_is_vict:
                 rescued = self.first_aid() # True when rescued
                 if rescued:
-                    print(f"{self.NAME} Victim rescued at ({self.x}, {self.y})")
+                    # print(f"{self.NAME} Victim rescued at ({self.x}, {self.y})")
+                    None
                 else:
-                    print(f"{self.NAME} Plan fail - victim not found at ({self.x}, {self.x})")
+                    # print(f"{self.NAME} Plan fail - victim not found at ({self.x}, {self.x})")
+                    None
         else:
             print(f"{self.NAME} Plan fail - walk error - agent at ({self.x}, {self.x})")
             

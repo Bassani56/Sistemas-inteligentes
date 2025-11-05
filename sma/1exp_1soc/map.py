@@ -64,8 +64,9 @@ class Map:
                     else:
                         row += f"[{item[0]:7.2f} {item[1]:3d}] "
                 else:
-                    row += f"[     ?     ] "
-            print(row)
+                    # row += f"[     ?     ] "
+                    None
+            # print(row)
 
 
     

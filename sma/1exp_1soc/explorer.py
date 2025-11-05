@@ -40,6 +40,7 @@ class Explorer(AbstAgent):
         """
 
         super().__init__(env, config_file)
+    
         self.walk_stack = Stack()  # a stack to store the movements
         self.set_state(VS.ACTIVE)  # explorer is active since the begin
         self.resc = resc           # reference to the rescuer agent
@@ -47,37 +48,18 @@ class Explorer(AbstAgent):
         self.y = 0                 # current y position relative to the origin 0
         self.map = Map()           # create a map for representing the environment
         self.victims = {}          # a dictionary of found victims: (seq): ((x,y), [<vs>])
-                                   # the key is the seq number of the victim,(x,y) the position, <vs> the list of vital signals
+                                # the key is the seq number of the victim,(x,y) the position, <vs> the list of vital signals
         self.config_file = config_file
-
-        print('resc ::: ', self.resc)
-        print('config_file:: ', config_file)
         
         # put the current position - the base - in the map
         self.map.add((self.x, self.y), 1, VS.NO_VICTIM, self.check_walls_and_lim())
 
-    def verific_agent(self, name_file):
-        string = str(name_file)
-        partes = string.split("\\")     # precisa ser \\ ou string bruta
-        nome = partes[-1].replace(".txt", "")
+    # def verific_agent(self, name_file):
+    #     string = str(name_file)
+    #     partes = string.split("\\")     # precisa ser \\ ou string bruta
+    #     nome = partes[-1].replace(".txt", "")
 
-        return nome
-
-    def get_next_position(self):
-        """ Randomically, gets the next position that can be explored (no wall and inside the grid)
-            There must be at least one CLEAR position in the neighborhood, otherwise it loops forever.
-        """
-        # Check the neighborhood walls and grid limits
-        obstacles = self.check_walls_and_lim()
-
-        # Loop until a CLEAR position is found
-        while True:
-            # Get a random direction
-            direction = random.randint(0, 7)
-     
-            # Check if the corresponding position in walls_and_lim is CLEAR
-            if obstacles[direction] == VS.CLEAR:
-                return Explorer.AC_INCR[direction]
+    #     return nome
 
     def get_next_position(self):
         """Retorna o próximo movimento usando DFS."""
@@ -85,7 +67,7 @@ class Explorer(AbstAgent):
         if self.walk_stack.is_empty():
             self.walk_stack.push((self.x, self.y))
         
-        nome = self.verific_agent(self.config_file)
+        nome = os.path.splitext(os.path.basename(self.config_file))[0].upper()
 
         priority_list_1 = [1, 2, 3, 4, 5, 0, 6, 7]
 
@@ -129,24 +111,26 @@ class Explorer(AbstAgent):
         # get an random increment for x and y       
         dx, dy = self.get_next_position()
 
-        # Moves the body to another position
-        rtime_bef = self.get_rtime()
+        # Moves the explorer agent to another position
+        rtime_bef = self.get_rtime()   ## get remaining batt time before the move
         result = self.walk(dx, dy)
-        rtime_aft = self.get_rtime()
+        rtime_aft = self.get_rtime()   ## get remaining batt time after the move
 
         # Test the result of the walk action
-        # Should never bump, but for safe functionning let's test
+        # It should never bump, since get_next_position always returns a valid position...
+        # but for safety, let's test it anyway
         if result == VS.BUMPED:
             # update the map with the wall
             self.map.add((self.x + dx, self.y + dy), VS.OBST_WALL, VS.NO_VICTIM, self.check_walls_and_lim())
             #print(f"{self.NAME}: Wall or grid limit reached at ({self.x + dx}, {self.y + dy})")
 
         if result == VS.EXECUTED:
-            # check for victim returns -1 if there is no victim or the sequential
-            # the sequential number of a found victim
+            # puts the visited position in a stack. When the batt is low, 
+            # the explorer unstack each visited position to come back to the base
             self.walk_stack.push((dx, dy))
 
-            # update the agent's position relative to the origin
+            # update the agent's position relative to the origin of 
+            # the coordinate system used by the agents
             self.x += dx
             self.y += dy          
 
@@ -154,8 +138,8 @@ class Explorer(AbstAgent):
             seq = self.check_for_victim()
             if seq != VS.NO_VICTIM:
                 vs = self.read_vital_signals()
-                self.victims[vs[0]] = ((self.x, self.y), vs)
-                print(f"{self.NAME} Victim found at ({self.x}, {self.y}), rtime: {self.get_rtime()}")
+                self.victims[seq] = ((self.x, self.y), vs)
+                #print(f"{self.NAME} Victim found at ({self.x}, {self.y}), rtime: {self.get_rtime()}")
                 #print(f"{self.NAME} Seq: {seq} Vital signals: {vs}")
             
             # Calculates the difficulty of the visited cell
@@ -172,45 +156,7 @@ class Explorer(AbstAgent):
         return
 
    
-    def explore(self):
-        """Explora o ambiente usando DFS."""
-        dx, dy = self.get_next_position()
-
-        if dx == 0 and dy == 0:
-            # Não há mais para onde ir
-            return
-
-        # Move o agente
-        rtime_bef = self.get_rtime()
-        result = self.walk(dx, dy)
-        rtime_aft = self.get_rtime()
-
-        if result == VS.BUMPED:
-            self.map.add((self.x + dx, self.y + dy), VS.OBST_WALL, VS.NO_VICTIM, self.check_walls_and_lim())
-            return
-
-        if result == VS.EXECUTED:
-            # Atualiza posição
-            self.x += dx
-            self.y += dy
-
-            # Verifica vítima
-            seq = self.check_for_victim()
-            if seq != VS.NO_VICTIM:
-                vs = self.read_vital_signals()
-                self.victims[vs[0]] = ((self.x, self.y), vs)
-                print(f"{self.NAME} Victim found at ({self.x}, {self.y})")
-
-            # Calcula dificuldade
-            difficulty = (rtime_bef - rtime_aft)
-            if dx == 0 or dy == 0:
-                difficulty /= self.COST_LINE
-            else:
-                difficulty /= self.COST_DIAG
-
-            # Marca célula como visitada
-            self.map.add((self.x, self.y), difficulty, seq, self.check_walls_and_lim())
-
+   
 
     def come_back(self):
         dx, dy = self.walk_stack.pop()
@@ -219,7 +165,7 @@ class Explorer(AbstAgent):
 
         result = self.walk(dx, dy)
         if result == VS.BUMPED:
-            print(f"{self.NAME}: when coming back bumped at ({self.x+dx}, {self.y+dy}) , rtime: {self.get_rtime()}")
+            # print(f"{self.NAME}: when coming back bumped at ({self.x+dx}, {self.y+dy}) , rtime: {self.get_rtime()}")
             return
         
         if result == VS.EXECUTED:
@@ -249,3 +195,41 @@ class Explorer(AbstAgent):
         self.come_back()
         return True
 
+ # def explore(self):
+    #     """Explora o ambiente usando DFS."""
+    #     dx, dy = self.get_next_position()
+
+    #     if dx == 0 and dy == 0:
+    #         # Não há mais para onde ir
+    #         return
+
+    #     # Move o agente
+    #     rtime_bef = self.get_rtime()
+    #     result = self.walk(dx, dy)
+    #     rtime_aft = self.get_rtime()
+
+    #     if result == VS.BUMPED:
+    #         self.map.add((self.x + dx, self.y + dy), VS.OBST_WALL, VS.NO_VICTIM, self.check_walls_and_lim())
+    #         return
+
+    #     if result == VS.EXECUTED:
+    #         # Atualiza posição
+    #         self.x += dx
+    #         self.y += dy
+
+    #         # Verifica vítima
+    #         seq = self.check_for_victim()
+    #         if seq != VS.NO_VICTIM:
+    #             vs = self.read_vital_signals()
+    #             self.victims[vs[0]] = ((self.x, self.y), vs)
+    #             # print(f"{self.NAME} Victim found at ({self.x}, {self.y})")
+
+    #         # Calcula dificuldade
+    #         difficulty = (rtime_bef - rtime_aft)
+    #         if dx == 0 or dy == 0:
+    #             difficulty /= self.COST_LINE
+    #         else:
+    #             difficulty /= self.COST_DIAG
+
+    #         # Marca célula como visitada
+    #         self.map.add((self.x, self.y), difficulty, seq, self.check_walls_and_lim())
